@@ -1,4 +1,4 @@
-import torch
+﻿import torch
 import torch.nn as nn
 import torch.optim as optim
 import gymnasium as gym
@@ -140,7 +140,7 @@ class Agent():
         action_probs = torch.sum(action_matrixs_t * y_pred, dim=-1)
         loss = -torch.log(action_probs) * discount_rewards_t
 
-        loss = loss.mean()
+        loss = loss.mean() # tensor 배열 데이터 형태에서 평균값(mean)을 구해서 다시 tensor에 대입한다. 이 값은 여전히 tensor테이터 형태이다.
         loss.backward()
         self.optimizer.step()
 
