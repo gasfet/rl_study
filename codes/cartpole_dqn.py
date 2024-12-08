@@ -28,7 +28,7 @@ class Agent(object):
         self.replay_memory = []
 
         self.epsilon = 0.99
-        self.epsilon_decay = 0.2 # 0.2 episodeÀÇ 20%°¡µÇ¸é ¼öÇàµÇ¸é  epsilonÀÌ 0ÀÌ µÈ´Ù.
+        self.epsilon_decay = 0.2 # 0.2 episodeì˜ 20%ê°€ë˜ë©´ ìˆ˜í–‰ë˜ë©´  epsilonì´ 0ì´ ëœë‹¤.
         self.epsilon_min = 0.05
         
         self.moving_avg_size = 20
@@ -51,7 +51,7 @@ class Agent(object):
     def train(self):
         for episode in range(self.episode_num):
             state = self.env.reset()
-            state = state[0] #ÃÖÃÊ dictionary ÇüÅÂ »ı¼º
+            state = state[0] #ìµœì´ˆ dictionary í˜•íƒœ ìƒì„±
             Q, count, reward_tot = self.take_action_and_append_memory(episode, state)
 
             if count < 500:
@@ -78,7 +78,7 @@ class Agent(object):
             state_t = np.reshape(state,[1, 1, self.state_size])
             Q = self.model.predict(state_t, verbose=0)
             action = self.greed_search(episilon, episode, Q)
-            state_next, reward, done, none, none2 = self.env.step(action) #2022.12.10 gym version upgrade ÈÄ return °ª 5°³·Î º¯°æ
+            state_next, reward, done, none, none2 = self.env.step(action) #2022.12.10 gym version upgrade í›„ return ê°’ 5ê°œë¡œ ë³€ê²½
             
             if done:
                 reward = self.penalty 

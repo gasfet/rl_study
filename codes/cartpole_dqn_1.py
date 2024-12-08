@@ -22,8 +22,8 @@ class DQN(nn.Module):
 
 
 class Agent:
-    def __init__(self):
-        self.env = gym.make('CartPole-v1')
+    def __init__(self, env):
+        self.env = env
         self.state_size = self.env.observation_space.shape[0]
         self.action_size = self.env.action_space.n
 
@@ -32,14 +32,22 @@ class Agent:
         self.epochs_cnt = 5
 
         self.model = DQN(self.state_size, self.action_size, self.node_num).to(device)
+        # 역할: 네트워크 구조를 정의하고, 입력 데이터를 처리하여 예측값을 생성합니다.
+        # 필요한 이유: 모델은 입력 데이터를 학습 가능한 가중치와 결합하여 결과를 예측하는 주요 계산 그래프입니다.
+
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        #역할: 모델의 가중치를 업데이트합니다. 손실 함수의 기울기를 계산한 후 최적화 알고리즘을 사용해 가중치를 조정합니다.
+        #필요한 이유: 네트워크가 손실을 줄이면서 더 나은 성능으로 학습할 수 있게 만듭니다.
+
         self.criterion = nn.MSELoss()
+        # 역할: 예측값과 실제값 간의 차이를 계산하는 손실 함수를 정의합니다.
+        # 필요한 이유: 손실 함수는 네트워크가 얼마나 잘 학습하고 있는지를 측정하는 기준입니다.
 
         self.discount_rate = 0.97
         self.penalty = -100
 
-        self.episode_num = 50
-
+        self.episode_num = 1000
+        
         self.replay_memory_limit = 2048
         self.replay_size = 32
         self.replay_memory = []
@@ -55,7 +63,7 @@ class Agent:
 
     def train(self):
         for episode in range(self.episode_num):
-            state = self.env.reset()[0]
+            state, _ = self.env.reset()
             state = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
             Q, count, reward_tot = self.take_action_and_append_memory(episode, state)
 
@@ -111,14 +119,25 @@ class Agent:
         batch_next_states = torch.cat([s[3] for s in samples])
         batch_dones = torch.tensor([s[4] for s in samples], device=device, dtype=torch.float32)
 
+        self.optimizer.zero_grad() # clear gradients
+
         # Predict Q values for current and next states
         Q_values = self.model(batch_states).gather(1, batch_actions.unsqueeze(1)).squeeze()
         with torch.no_grad():
             Q_next = self.model(batch_next_states).max(1)[0]
             Q_target = batch_rewards + (1 - batch_dones) * self.discount_rate * Q_next
 
-        loss = self.criterion(Q_values, Q_target)
-        self.optimizer.zero_grad()
+        """
+        # 학습 루프
+        for epoch in range(100):
+            optimizer.zero_grad()   # 그래디언트 초기화
+            outputs = model(inputs) # 모델의 출력 계산
+            loss = criterion(outputs, target) # 손실 계산
+            loss.backward()         # 역전파로 그래디언트 계산
+            optimizer.step()        # 옵티마이저로 가중치 업데이트
+        """        
+        
+        loss = self.criterion(Q_values, Q_target)        
         loss.backward()
         self.optimizer.step()
 
@@ -142,10 +161,11 @@ class Agent:
         print("***** End Training *****")
 
 
-if __name__ == "__main__":
-    agent = Agent()
+def main():
+    env = gym.make('CartPole-v1')
+    agent = Agent(env)
     agent.train()
-
+    
     # Plot rewards and moving averages
     plt.figure(figsize=(10, 5))
     plt.plot(agent.reward_list, label="Rewards")
@@ -153,3 +173,7 @@ if __name__ == "__main__":
     plt.legend(loc="upper left")
     plt.title("DQN")
     plt.show()
+
+if __name__ == "__main__":
+    main()
+    
