@@ -1,4 +1,4 @@
-import torch
+﻿import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
@@ -119,25 +119,15 @@ class Agent:
         batch_next_states = torch.cat([s[3] for s in samples])
         batch_dones = torch.tensor([s[4] for s in samples], device=device, dtype=torch.float32)
 
-        self.optimizer.zero_grad() # clear gradients
-
         # Predict Q values for current and next states
         Q_values = self.model(batch_states).gather(1, batch_actions.unsqueeze(1)).squeeze()
         with torch.no_grad():
             Q_next = self.model(batch_next_states).max(1)[0]
             Q_target = batch_rewards + (1 - batch_dones) * self.discount_rate * Q_next
 
-        """
-        # 학습 루프
-        for epoch in range(100):
-            optimizer.zero_grad()   # 그래디언트 초기화
-            outputs = model(inputs) # 모델의 출력 계산
-            loss = criterion(outputs, target) # 손실 계산
-            loss.backward()         # 역전파로 그래디언트 계산
-            optimizer.step()        # 옵티마이저로 가중치 업데이트
-        """        
-        
         loss = self.criterion(Q_values, Q_target)        
+        
+        self.optimizer.zero_grad() # clear gradients
         loss.backward()
         self.optimizer.step()
 
